@@ -1,4 +1,5 @@
 """
+Add some notes here
 """
 
 from pygame.locals import *
@@ -29,8 +30,12 @@ class Game:
 		self.exit     = pygame.image.load('exit.png').convert()
 		self.blank    = pygame.image.load('blank.png').convert()
 
+		self.player_location = [0,0]
+		self.player_died = False
+
 	def render_player(self,x,y):
 		location = [x*IMAGE_WIDTH, y*IMAGE_HEIGHT]
+
 		self.screen.blit(self.player,location)
 
 	def render_object(self,x,y):
@@ -49,6 +54,19 @@ class Game:
 		else:
 			self.screen.blit(self.blank,location)
 
+	def move_blocked(self,x,y):
+		blocked = False
+		if self.level[y][x] == '#':
+			blocked = True
+		return blocked
+
+	def player_falling(self,x,y):
+		falling = False
+		# look at block under player, to see if something under him
+		if self.level[y+1][x] == ' ':
+			falling = True
+		return falling
+
 	def start(self):
 		# draw the screen
 		for y in range(self.height):
@@ -61,34 +79,52 @@ class Game:
 				elif self.level[y][x] == 'X':
 					self.exit_location = [x,y]
 					print ("Exit at ", x, y)
+		print ("Hello");
 
-		done = False
-		self.player_died = False
+		pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
 
-		while not done:
+		while not self.player_died:
 			pygame.event.pump()
 
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
-					done = True
+					self.player_died = True
 
 			# draw what was under the player
 			self.render_object(self.player_location[0], self.player_location[1])
 
-			# move the player, if user pressed any keys
+			# if the user pressed any keys then move the player
 			keys = pygame.key.get_pressed()
+
+			# figure out which way the player moved
+			x_diff = 0
+			y_diff = 0
+
 			if (keys[K_RIGHT]):
-				self.player_location[0] = self.player_location[0] + 1
+				x_diff = 1
 			if (keys[K_LEFT]):
-				self.player_location[0] = self.player_location[0] - 1
+				x_diff = -1
 			if (keys[K_DOWN]):
-				self.player_location[1] = self.player_location[1] + 1
+				y_diff = 1
 			if (keys[K_UP]):
-				self.player_location[1] = self.player_location[1] - 1
+				y_diff = -1
+
+			# if the player moved, make sure the path is not blocked by a wall
+			if x_diff or y_diff:
+				new_x = self.player_location[0] + x_diff
+				new_y = self.player_location[1] + y_diff
+				if self.move_blocked(new_x, new_y):
+					print ("Move blocked!")
+				else:
+					self.player_location[0] = new_x
+					self.player_location[1] = new_y
+
+			# if nothing below the player, then they fall down a block
+			if self.player_falling(self.player_location[0], self.player_location[1]):
+				print ("Falling");
+				self.player_location[1] = self.player_location[1] + 1
 
 			self.render_player(self.player_location[0], self.player_location[1])
-
-			# make sure player didn't run into anything
 
 			# make sure player is in bounds, or else they died
 			if self.player_location[0] < 0:
@@ -100,11 +136,8 @@ class Game:
 			elif self.player_location[1] > self.height:
 				self.player_died = True
 
-			if self.player_died:
-				done = True
-			
 			pygame.display.flip()
-			self.clock.tick(30)
+			self.clock.tick(20)
 
 		pygame.quit()
 
