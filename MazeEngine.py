@@ -79,7 +79,6 @@ class Game:
 				elif self.level[y][x] == 'X':
 					self.exit_location = [x,y]
 					print ("Exit at ", x, y)
-		print ("Hello");
 
 		pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
 
