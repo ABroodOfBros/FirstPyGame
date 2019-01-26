@@ -91,6 +91,28 @@ Maze = [
 
 if __name__ == "__main__":
 	game = MazeEngine.Game()
-	game.load(Maze[0])
-	game.start()
+
+	# present the player with each level, one at a time, until
+	# they lose or complete all the levels!
+
+	winner = True
+	completed = 0
+	for level in range(len(Maze)):
+		game.load(Maze[level])
+		if game.play():
+			# player completed a level
+			completed = completed + 1
+		else:
+			# sadly, the player failed at this level
+			winner = False
+			break;
+
+	game.cleanup()
+
+	if winner:
+		print ("Contratulations, you are a winner!")
+	elif completed > 0:
+		print ("Nice work, you completed", completed, "levels.")
+	else:
+		print ("Did you even try? I think not!")
 
